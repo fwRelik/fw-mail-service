@@ -1,0 +1,20 @@
+// Rename this file to .json format
+
+{
+    "mailServiceConfig": {
+        "sender": {
+            "email": "example@gmail.com",
+            "account_api_key": "Api_key_pass"
+        },
+        "html_template_file_name": "example.html
+    },
+    "clientCheckConfig": {
+        "pool": {
+            "host": "example.com",
+            "user": "user_name",
+            "password": "pass",
+            "database": "database_name"
+        },
+        "table_name": "table_name"
+    }
+}

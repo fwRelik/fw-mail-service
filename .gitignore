@@ -1,0 +1,7 @@
+/node_modules
+/dist
+/.vscode
+/.env
+
+/src/service.config.json
+/config/local.config.json
