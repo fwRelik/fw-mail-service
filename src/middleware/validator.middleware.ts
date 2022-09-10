@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
+import { IRequestValidator } from "./validator.middleware.interface";
 
-export class RequestValidator {
+export class RequestValidator implements IRequestValidator {
     headers(req: Request, res: Response, next: NextFunction): void {
         const { headers, method } = req;
 

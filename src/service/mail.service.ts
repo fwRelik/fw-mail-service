@@ -1,17 +1,19 @@
 import nodemailer, { SentMessageInfo } from 'nodemailer';
 import { MailTemplate } from '../common/mail-template';
-import { mailServiceConfig } from '../service.config.json';
+import { IMailTemplate } from '../common/mail-template.interface';
+import { IMailService } from './mail.service.interface';
 
+import { mailServiceConfig } from '../service.config.json';
 const { sender } = mailServiceConfig;
 
-export class MailService {
-    mailTemplate: MailTemplate;
+export class MailService implements IMailService {
+    mailTemplate: IMailTemplate;
 
     constructor() {
         this.mailTemplate = new MailTemplate();
     }
 
-    async transition(data: any): Promise<SentMessageInfo> {
+    async transition(data: object): Promise<SentMessageInfo> {
         const html = await this.mailTemplate.readTemplate(data);
 
         let transporter = nodemailer.createTransport({
@@ -24,9 +26,9 @@ export class MailService {
 
         let result = await transporter.sendMail({
             from: sender.email,
-            to: data.target,
-            subject: `New Mail from ${data.email}`,
-            html: html
+            to: sender.target,
+            subject: html.head,
+            html: html.body
         });
 
         return result;

@@ -1,38 +1,32 @@
 import { NextFunction, Request, Response } from 'express';
 import mysql, { Pool } from 'mysql';
 import { clientCheckConfig } from '../service.config.json';
+import { IClientCheck, IDataCreate } from './client-check.middleware.interface';
 
-interface IDataCreate {
-    id: string;
-    name?: string;
-    ip?: string;
-    email?: string;
-    phone?: string;
-    message?: string;
-    attempt: number;
-    date?: string;
-}
-
-export class ClientCheck {
+export class ClientCheck implements IClientCheck {
     body: any;
     default_attempt: number;
     dataCreate: IDataCreate;
-    pool: Pool
+    pool: Pool;
+    clientIp: string | string[] | undefined;
 
     constructor(
         private req: Request,
         private res: Response,
         private next: NextFunction
     ) {
-        this.body = this.req.body;
         this.default_attempt = 2;
+
+        // x-forwarded-for сreates a risk for customer validation and database overflow.
+        this.clientIp = this.req.headers['x-forwarded-for'] || this.req.socket.remoteAddress;
+
         this.dataCreate = {
             id: '',
-            name: this.body.name,
-            ip: req.ip,
-            email: this.body.email,
-            phone: this.body.phone,
-            message: this.body.message,
+            name: this.req.body.name,
+            ip: this.clientIp,
+            email: this.req.body.email,
+            phone: this.req.body.phone,
+            message: this.req.body.message,
             attempt: this.default_attempt,
             date: this.dateFunc(new Date())
         };
@@ -62,19 +56,19 @@ export class ClientCheck {
         return commands[method];
     }
 
-    dateFunc(date: any) {
+    dateFunc(date: Date): string {
         const d = new Date(date);
         return `${d.getFullYear()}-${('0' + (d.getMonth() + 1)).slice(-2)}-${('0' + d.getDate()).slice(-2)}`;
     }
 
-    async userCheck() {
+    async userCheck(): Promise<void> {
         const data = await this.appealDB(this.commands('get'));
-        const result = data.find((item: IDataCreate) => this.req.ip === item.ip);
+        const result = data.find((item: IDataCreate) => this.clientIp === item.ip);
 
         return new Promise((resolve, reject) => {
             if (!result) {
                 this.appealDB(this.commands('insert', this.dataCreate));
-                resolve(null);
+                resolve();
                 return;
             } else if (result.attempt <= 0) {
                 if (String(this.dateFunc(new Date())) == this.dateFunc(result.date)) {
@@ -86,7 +80,7 @@ export class ClientCheck {
                         attempt: this.default_attempt - 1,
                         date: this.dateFunc(new Date())
                     }));
-                    resolve(null);
+                    resolve();
                     return;
                 }
             }
@@ -95,7 +89,7 @@ export class ClientCheck {
                 id: result.id,
                 attempt: result.attempt - 1
             }));
-            resolve(null);
+            resolve();
         });
     }
 
@@ -104,6 +98,7 @@ export class ClientCheck {
             try {
                 this.pool.getConnection((err, connection) => {
                     if (err) throw new Error(String(err));
+
                     connection.query(command, (err, rows) => {
                         connection.release();
 
@@ -121,7 +116,7 @@ export class ClientCheck {
         this.userCheck()
             .then(() => this.next())
             .catch(() => {
-                console.log('Denied: ' + this.req.ip);
+                console.log('Denied: ' + this.clientIp);
                 this.res.status(403).send('Send limit per day reached.');
             });
     }

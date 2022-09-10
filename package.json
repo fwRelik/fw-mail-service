@@ -1,6 +1,6 @@
 {
   "name": "fw-mail-service",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Sending emails with a simple fetch or axios request.",
   "main": "index.js",
   "type": "commonjs",
@@ -15,9 +15,9 @@
     "url": "git+https://github.com/fwRelik/fw-mail-service.git"
   },
   "keywords": [
-    "Email",
-    "Email api",
-    "Email fetch"
+    "E-mail",
+    "mail service",
+    "simple send email"
   ],
   "author": "fwRelik",
   "license": "ISC",
