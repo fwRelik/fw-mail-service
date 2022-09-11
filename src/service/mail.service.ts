@@ -20,7 +20,7 @@ export class MailService implements IMailService {
             service: 'gmail',
             auth: {
                 user: sender.email,
-                pass: sender.account_api_key,
+                pass: sender.account_app_password,
             }
         });
 

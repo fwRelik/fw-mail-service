@@ -4,7 +4,8 @@
     "mailServiceConfig": {
         "sender": {
             "email": "example@gmail.com",
-            "account_api_key": "Api_key_pass"
+            "account_app_password": "app_password",
+            "target": "to.example@mail.com"
         },
         "html_template_file_name": "example.html
     },

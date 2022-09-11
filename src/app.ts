@@ -7,6 +7,7 @@ import { IMailService } from './service/mail.service.interface';
 import { ClientCheck } from './middleware/client-check.middleware';
 import { RequestValidator } from './middleware/validator.middleware';
 import { IRequestValidator } from './middleware/validator.middleware.interface';
+import { ServerController } from './server/server.controller';
 
 export class App {
     app: Express;
@@ -14,12 +15,14 @@ export class App {
     port: number | string;
     mailService: IMailService;
     requestValidator: IRequestValidator;
+    serverController: ServerController;
 
     constructor() {
         this.app = express();
         this.port = process.env.PORT ?? 3000;
         this.mailService = new MailService();
         this.requestValidator = new RequestValidator();
+        this.serverController = new ServerController(this.mailService);
     }
 
     useMiddleware(): void {
@@ -33,31 +36,18 @@ export class App {
             next();
         });
 
+        // Requests validation.
         this.app.use(this.requestValidator.headers);
         this.app.use(this.requestValidator.body);
 
+        // Preclusion  tion too frequent requests.
         this.app.use((req, res, next) => {
             new ClientCheck(req, res, next).init();
         });
     }
 
     useRoutes(): void {
-        this.app.post('/', (req, res) => {
-            const body = req.body;
-
-            console.log('Client IP: ' + req.headers['x-forwarded-for'] || req.socket.remoteAddress);
-
-            this.mailService.transition(body)
-                .then(result => {
-                    console.log(result);
-                    res.status(200).send('Ok');
-                })
-                .catch(e => {
-                    console.error('Mail service error: ' + e);
-                    res.status(500).send('Mail service error');
-                });
-        });
-
+        this.app.use('/', this.serverController.router);
 
         this.app.all('*', (req, res) => {
             res.status(404).send('Not Found.');
