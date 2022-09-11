@@ -1,6 +1,6 @@
 {
   "name": "fw-mail-service",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Sending emails with a simple fetch or axios request.",
   "main": "index.js",
   "type": "commonjs",
